@@ -2,9 +2,9 @@ import React, {FC} from 'react';
 import {StyleSheet, Text, TouchableOpacity} from 'react-native';
 
 export type Props = {
-  icon: any;
-  title: string;
-  onPress: any;
+  icon?: any;
+  title?: string;
+  onPress: () => void;
 };
 
 const Button: FC<Props> = Props => {

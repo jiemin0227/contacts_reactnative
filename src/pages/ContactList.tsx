@@ -14,17 +14,27 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 import {Header} from '../component/header';
 import {Button} from '../component/button';
-import {readItemFromStorage} from '../storage/asyncStorage';
+import {readItemFromStorage, writeItemToStorage} from '../storage/asyncStorage';
 import {useFocusEffect} from '@react-navigation/native';
 import data from '../data/data.json';
+import {NavigationProps} from '../../App';
 
-const ContactList = ({navigation}) => {
-  const [dataContact, setDataContact] = useState([]);
+export type ContactItemProps = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+};
+
+const ContactList = ({navigation}: NavigationProps) => {
+  const [dataContact, setDataContact] = useState<ContactItemProps[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = () => {
     setRefreshing(true);
     setDataContact(data);
+    writeItemToStorage(data);
     setRefreshing(false);
   };
 
@@ -34,20 +44,10 @@ const ContactList = ({navigation}) => {
     }, []),
   );
 
-  type ItemProps = {
-    item: {
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-    };
-  };
-
   const ItemSeparatorComponent = () => (
     <View style={styles.flatListItemSeparator} />
   );
-  const Item = ({item}: ItemProps) => (
+  const Item = (item: ContactItemProps) => (
     <TouchableOpacity
       style={styles.flatListItem}
       onPress={() =>
@@ -73,34 +73,20 @@ const ContactList = ({navigation}) => {
         headerTitle="Contacts"
         headerLeft={
           <Button
-            icon={
-              <Icon
-                name="search-outline"
-                backgroundColor="transparent"
-                color="#ff8c00"
-                size={20}
-              />
-            }
+            icon={<Icon name="search-outline" color="#ff8c00" size={20} />}
             onPress={() => console.log('search')}
           />
         }
         headerRight={
           <Button
-            icon={
-              <Icon
-                name="add-outline"
-                backgroundColor="transparent"
-                color="#ff8c00"
-                size={20}
-              />
-            }
+            icon={<Icon name="add-outline" color="#ff8c00" size={20} />}
             onPress={() => console.log('add')}
           />
         }
       />
       <FlatList
         data={dataContact}
-        renderItem={({item}) => <Item item={item} />}
+        renderItem={({item}) => <Item {...item} />}
         keyExtractor={item => item.id}
         ItemSeparatorComponent={ItemSeparatorComponent}
         style={styles.flatListContainer}

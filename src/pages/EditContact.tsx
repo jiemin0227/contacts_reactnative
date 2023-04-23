@@ -10,26 +10,31 @@ import {
   View,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-
-import Icon from 'react-native-vector-icons/Ionicons';
-
 import {Header} from '../component/header';
 import {Button} from '../component/button';
 import {PrimaryTextInput} from '../component/textInput';
 import {readItemFromStorage, writeItemToStorage} from '../storage/asyncStorage';
+import {EditContactNavigationProps} from '../../App';
+import {ContactItemProps} from './ContactList';
 
-const EditContact = ({route, navigation}) => {
+type ErrorMessageProps = {
+  field: string;
+  message: string;
+};
+
+const EditContact = ({route, navigation}: EditContactNavigationProps) => {
   const [dataContact, setDataContact] = useState([]);
   const {itemId} = route.params;
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState<string | undefined>('');
+  const [phone, setPhone] = useState<string | undefined>('');
+  const [errorMessage, setErrorMessage] = useState<ErrorMessageProps[]>([]);
 
-  const refFirstName = useRef<PrimaryTextInput | null>(null);
-  const refLastName = useRef<PrimaryTextInput | null>(null);
-  const refEmail = useRef<PrimaryTextInput | null>(null);
-  const refPhone = useRef<PrimaryTextInput | null>(null);
+  const refFirstName = useRef<TextInput>(null);
+  const refLastName = useRef<TextInput>(null);
+  const refEmail = useRef<TextInput>(null);
+  const refPhone = useRef<TextInput>(null);
 
   useEffect(() => {
     readItemFromStorage(setDataContact);
@@ -37,27 +42,48 @@ const EditContact = ({route, navigation}) => {
 
   useEffect(() => {
     if (dataContact.length > 0) {
-      let dataContactArr = [...dataContact];
+      let dataContactArr: ContactItemProps[] = [...dataContact];
       let selectedContact = dataContactArr.find(item => item.id == itemId);
-      setFirstName(selectedContact.firstName);
-      setLastName(selectedContact.lastName);
-      setEmail(selectedContact.email);
-      setPhone(selectedContact.phone);
+      if (selectedContact != undefined) {
+        setFirstName(selectedContact.firstName);
+        setLastName(selectedContact.lastName);
+        setEmail(selectedContact.email);
+        setPhone(selectedContact.phone);
+      }
     }
   }, [dataContact]);
 
   const handleSubmit = () => {
-    let dataContactArr = [...dataContact];
-    let selectedContactIndex = dataContactArr.findIndex(
-      item => item.id == itemId,
-    );
-    dataContactArr[selectedContactIndex].firstName = firstName;
-    dataContactArr[selectedContactIndex].lastName = lastName;
-    dataContactArr[selectedContactIndex].email = email;
-    dataContactArr[selectedContactIndex].phone = phone;
+    let errorMessageArr = [];
+    if (firstName.trim() == '' || lastName.trim() == '') {
+      if (firstName.trim() == '') {
+        errorMessageArr.push({
+          field: 'firstName',
+          message: 'This field is required.',
+        });
+        setErrorMessage(errorMessageArr);
+      }
 
-    writeItemToStorage(dataContactArr);
-    navigation.goBack();
+      if (lastName.trim() == '') {
+        errorMessageArr.push({
+          field: 'lastName',
+          message: 'This field is required.',
+        });
+        setErrorMessage(errorMessageArr);
+      }
+    } else {
+      let dataContactArr: ContactItemProps[] = [...dataContact];
+      let selectedContactIndex = dataContactArr.findIndex(
+        item => item.id == itemId,
+      );
+      dataContactArr[selectedContactIndex].firstName = firstName;
+      dataContactArr[selectedContactIndex].lastName = lastName;
+      dataContactArr[selectedContactIndex].email = email;
+      dataContactArr[selectedContactIndex].phone = phone;
+
+      writeItemToStorage(dataContactArr);
+      navigation.goBack();
+    }
   };
 
   type HeadingProps = {
@@ -85,18 +111,22 @@ const EditContact = ({route, navigation}) => {
         <View style={styles.sectionContainer}>
           <PrimaryTextInput
             label="First Name"
+            field="firstName"
             value={firstName}
             onChangeText={setFirstName}
             ref={refFirstName}
             onSubmitEditing={() => refLastName.current?.focus()}
+            error={errorMessage}
           />
           <View style={styles.inputSeparator} />
           <PrimaryTextInput
             label="Last Name"
+            field="lastName"
             value={lastName}
             onChangeText={setLastName}
             ref={refLastName}
             onSubmitEditing={() => refEmail.current?.focus()}
+            error={errorMessage}
           />
         </View>
 
@@ -104,6 +134,7 @@ const EditContact = ({route, navigation}) => {
         <View style={styles.sectionContainer}>
           <PrimaryTextInput
             label="Email"
+            field="email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -113,6 +144,7 @@ const EditContact = ({route, navigation}) => {
           <View style={styles.inputSeparator} />
           <PrimaryTextInput
             label="Phone"
+            field="phone"
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"

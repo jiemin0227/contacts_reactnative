@@ -2,9 +2,9 @@ import React, {FC} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 
 export type Props = {
-  headerTitle: string;
-  headerLeft: any;
-  headerRight: any;
+  headerTitle?: string;
+  headerLeft?: any;
+  headerRight?: any;
 };
 
 const Header: FC<Props> = Props => {

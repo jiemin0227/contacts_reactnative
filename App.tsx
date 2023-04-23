@@ -1,17 +1,34 @@
 import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {
+  NativeStackScreenProps,
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 import React, {useEffect} from 'react';
 import ContactList from './src/pages/ContactList';
 import EditContact from './src/pages/EditContact';
 import data from './src/data/data.json';
 import {writeItemToStorage} from './src/storage/asyncStorage';
 
-const Stack = createNativeStackNavigator();
+type RootStackParamList = {
+  ContactList: undefined;
+  EditContact: {
+    itemId: string;
+  };
+};
+
+export type NavigationProps = NativeStackScreenProps<RootStackParamList>;
+export type EditContactNavigationProps = NativeStackScreenProps<
+  RootStackParamList,
+  'EditContact'
+>;
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const App = () => {
   useEffect(() => {
     writeItemToStorage(data);
   }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator
